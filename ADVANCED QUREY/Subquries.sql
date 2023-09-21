@@ -39,3 +39,9 @@ WHERE EmployeeID in (
 		FROM EmployeeDemographics
 		WHERE Age > 30)
 
+SELECT EmployeeID, jobTitle, Salary
+FROM EmployeeSalary
+WHERE EmployeeID in (
+		SELECT EmployeeID
+		FROM EmployeeDemographics
+		WHERE Age > 30)
