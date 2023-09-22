@@ -32,6 +32,12 @@ FROM (SELECT EmployeeID, Salary, Avg(Salary) over() As AllAvgsalary
 
 
 -- Subqurey in WHERE
+SELECT EmployeeID, jobTitle, Salary
+FROM EmployeeSalary
+WHERE EmployeeID in (
+		SELECT EmployeeID
+		FROM EmployeeDemographics
+		WHERE Age > 30)
 
 SELECT EmployeeID, jobTitle, Salary
 FROM EmployeeSalary
