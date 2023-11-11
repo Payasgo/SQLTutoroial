@@ -16,6 +16,10 @@
 			"metadata": "Secure string for 'connectionString' of 'LS_SqlServertable'",
 			"defaultValue": "Integrated Security=False;Data Source=MURALIYARLI;Initial Catalog=EMPLOYEE;User ID=kranthiyarli"
 		},
+		"SqlServer1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SqlServer1'"
+		},
 		"LS_AzureDataLakeStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://sqlcopyadfpipeline.dfs.core.windows.net/"
@@ -56,6 +60,9 @@
 					},
 					"LS_SqlServertable_connectionString": {
 						"value": "[parameters('LS_SqlServertable_connectionString')]"
+					},
+					"SqlServer1_connectionString": {
+						"value": "[parameters('SqlServer1_connectionString')]"
 					},
 					"LS_AzureDataLakeStorage_properties_typeProperties_url": {
 						"value": "[parameters('LS_AzureDataLakeStorage_properties_typeProperties_url')]"

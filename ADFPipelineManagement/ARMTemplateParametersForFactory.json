@@ -11,6 +11,9 @@
 		"LS_SqlServertable_connectionString": {
 			"value": "Integrated Security=False;Data Source=MURALIYARLI;Initial Catalog=EMPLOYEE;User ID=kranthiyarli"
 		},
+		"SqlServer1_connectionString": {
+			"value": ""
+		},
 		"LS_AzureDataLakeStorage_properties_typeProperties_url": {
 			"value": "https://sqlcopyadfpipeline.dfs.core.windows.net/"
 		},
