@@ -1,0 +1,9 @@
+{
+	"name": "ADFPipelineManagement",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f52d9674-d7e0-4208-8260-4d51b06f72e7",
+		"tenantId": "2db0e13c-89f2-4a67-88ce-504c6fb70607"
+	}
+}
