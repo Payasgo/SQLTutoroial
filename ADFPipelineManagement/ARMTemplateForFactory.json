@@ -34,13 +34,13 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/Get_all_table')]",
+			"name": "[concat(parameters('factoryName'), '/Copy_all_table')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "GET_ALL_Table",
+						"name": "Look_for_all_table",
 						"type": "Lookup",
 						"dependsOn": [],
 						"policy": {
@@ -59,7 +59,7 @@
 								"partitionOption": "None"
 							},
 							"dataset": {
-								"referenceName": "DS_ALL_COPY_SqlServerTable",
+								"referenceName": "New_SqlServerTable",
 								"type": "DatasetReference",
 								"parameters": {}
 							},
@@ -67,11 +67,11 @@
 						}
 					},
 					{
-						"name": "Copy_ALL_Table",
+						"name": "ForEach_Schema_Table",
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "GET_ALL_Table",
+								"activity": "Look_for_all_table",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -80,12 +80,12 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('All_Table').output.value",
+								"value": "@activity('Look_for_all_table').output.value",
 								"type": "Expression"
 							},
 							"activities": [
 								{
-									"name": "All_Table",
+									"name": "Copy_Tables",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -100,7 +100,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "@{concat('SELECT * FROM', item().SchemaName, '.', item().TableName)}",
+												"value": "@{concat('SELECT * FROM ', item().SchemaName, '.',item().TableName)}",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -127,14 +127,14 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "GB_DS_SqlServerTable",
+											"referenceName": "Copy_SqlServerTable",
 											"type": "DatasetReference",
 											"parameters": {}
 										}
 									],
 									"outputs": [
 										{
-											"referenceName": "Get_all_DS_Table_Parquet",
+											"referenceName": "Copy_ALL_table_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
 												"SchemaName": {
@@ -142,7 +142,7 @@
 													"type": "Expression"
 												},
 												"TableName": {
-													"value": "item().TableName",
+													"value": "@item().TableName",
 													"type": "Expression"
 												}
 											}
@@ -157,14 +157,14 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "SqlServer_Alltable"
+					"name": "SqlServer_Onpermise"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_ALL_COPY_SqlServerTable')]",
-				"[concat(variables('factoryId'), '/datasets/GB_DS_SqlServerTable')]",
-				"[concat(variables('factoryId'), '/datasets/Get_all_DS_Table_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/New_SqlServerTable')]",
+				"[concat(variables('factoryId'), '/datasets/Copy_SqlServerTable')]",
+				"[concat(variables('factoryId'), '/datasets/Copy_ALL_table_Parquet')]"
 			]
 		},
 		{
@@ -237,6 +237,64 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SqlServerTable')]",
 				"[concat(variables('factoryId'), '/datasets/copy_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Copy_ALL_table_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_AzureDataLakeStorage",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{concat(dataset().TableName, '.parquet')}",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@{concat(dataset().SchemaName, '/',dataset().TableName)}",
+							"type": "Expression"
+						},
+						"fileSystem": "copyfile"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AzureDataLakeStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Copy_SqlServerTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SqlServertable",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SqlServertable')]"
 			]
 		},
 		{
@@ -322,12 +380,12 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/GB_DS_SqlServerTable')]",
+			"name": "[concat(parameters('factoryName'), '/New_SqlServerTable')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "SqlServer1",
+					"referenceName": "LS_SqlServertable",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
@@ -336,47 +394,7 @@
 				"typeProperties": {}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SqlServer1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Get_all_DS_Table_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_AzureDataLakeStorage",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"SchemaName": {
-						"type": "string"
-					},
-					"TableName": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@{concat(dataset().TableName),'.parquet'}",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@{concat(dataset().SchemaName, '/',dataset().TableName)}",
-							"type": "Expression"
-						},
-						"fileSystem": "copyfile"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_AzureDataLakeStorage')]"
+				"[concat(variables('factoryId'), '/linkedServices/LS_SqlServertable')]"
 			]
 		},
 		{
